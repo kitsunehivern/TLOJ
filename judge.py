@@ -4,7 +4,7 @@ import json
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 
-with open('config.json', 'r', encoding = 'utf8') as f:
+with open("config.json", 'r', encoding = 'utf8') as f:
     config = json.load(f)
 
     sheet_name = config['sheet_name']
@@ -17,7 +17,7 @@ with open('config.json', 'r', encoding = 'utf8') as f:
     delay_time = config['delay_time']
     reset_time = config['reset_time']
 
-with open('key.json', 'r') as f:
+with open("key.json", 'r') as f:
     key = json.load(f)
 
     judge_id = key['client_id']
@@ -49,31 +49,34 @@ def log_parser(log, problem_data):
     max_execution_time = 0
     final_message = result_message['AC']
     tests_result = []
-    failed_test = '-'
+    failed_test = 0
     if result_message['CE'] in log:
-        final_message = result_message['CE'] + '\n'
+        failed_test = 1
+        final_message = result_message['CE']
+        message = result_message['CE']
         for i in range(3, len(logs) - 1):
             if logs[i] == "Dịch lỗi!":
                 break
 
             if logs[i].split('.')[0] == problem_name:
-                logs[i].replace(problem_name, 'main', 1)
+                logs[i] = logs[i].replace(problem_name, 'main', 1)
             elif logs[i].split(' ')[0] == 'Error:' and language == 'pas': # Pascal, why?
                 continue
 
-            final_message += logs[i] + '\n'
+            message += '\n' + logs[i]
+        tests_result.append({'points': 0, 'execution_time': 0, 'message': message})
     else:
         total_points = round(float(logs[0].split(' ')[-1].replace(',', '.')), 2)
 
-        i = logs.index("") + 1
-        tests_count = 0
+        i = 1
+        while i < len(logs) and chr(0x2023) not in logs[i]:
+            i += 1
+
         while i < len(logs):
             j = i + 1
-            while j < len(logs) and problem_name not in logs[j]:
+            while j < len(logs) and chr(0x2023) not in logs[j]:
                 j += 1
             j -= 1
-
-            tests_count += 1
 
             points = round(float(logs[i].split(' ')[-1].replace(',', '.')), 2)
             execution_time = 0
@@ -98,26 +101,28 @@ def log_parser(log, problem_data):
 
             max_execution_time = max(max_execution_time, execution_time)
             
-            if message != result_message['AC'] and failed_test == '-':
-                failed_test = str(tests_count)
+            if message != result_message['AC'] and failed_test == 0:
+                failed_test = len(tests_result) + 1
                 final_message = message
             
             if message == result_message['RE']:
-                message += f'(exit code: {exit_code})'
+                message += f' (exit code: {exit_code})'
 
             tests_result.append({'points': points, 'execution_time': execution_time, 'message': message})
 
             i = j + 1
 
     total_points = round(total_points, 2)
-    final_message = final_message[:-1]
+
+    if final_message == result_message['AC']:
+        failed_test = len(tests_result)
 
     return total_points, max_execution_time, final_message, failed_test, tests_result
 
 def format_log(total_points, max_execution_time, final_message, tests_result):
-    log = f"Tổng [{total_points:g} điểm, {max_execution_time} ms]: {final_message}"
+    log = f"Tổng: [{total_points:g} điểm, {max_execution_time} ms] {final_message}"
     for i in range(len(tests_result)):
-        log += f"\n#{i + 1} [{tests_result[i]['points']:g} điểm, {tests_result[i]['execution_time']} ms]: {tests_result[i]['message']}"
+        log += f"\n#{i + 1}: [{tests_result[i]['points']:g} điểm, {tests_result[i]['execution_time']} ms] {tests_result[i]['message']}"
 
     return log
 
@@ -196,7 +201,7 @@ while True:
     if status == '':
         send_request(sheet.update, [["Đang chờ...", judge_id]], f"G{current_row}:H{current_row}")
 
-        with open("Submissions/" + submission_name, 'w', encoding = "utf8") as f:
+        with open("Submissions/" + submission_name, 'w', encoding = 'utf8') as f:
             f.write(source_code)
 
         print("Change status to Waiting")
@@ -206,7 +211,7 @@ while True:
                 send_request(sheet.update_cell, current_row, 7, "Đang chấm...")
             
             print("Change status to Judging")
-        elif status == 'Đang chấm...':
+        elif status == "Đang chấm...":
             if os.path.exists("Submissions/Logs/" + submission_name + ".log"):
                 send_request(sheet.update_cell, current_row, 7, "Đã chấm")
                 with open("Submissions/Logs/" + submission_name + ".log", 'r', encoding = 'utf8') as f:
