@@ -26,7 +26,7 @@ Các bạn có thể tải Python tại [đây](https://www.python.org/downloads
 ### Cài đặt Google Sheets API
 
 1. Tạo một dự án mới tại [Google Cloud Platform](https://console.cloud.google.com/).
-2. Bật Google Sheets API và Google Drive API tại [Google API Console](https://console.developers.google.com/).
+2. Bật Google Sheets API tại [Google API Console](https://console.developers.google.com/).
 3. Tạo một Service Account và tải xuống file JSON chứa thông tin xác thực với tên `key.json`.
 
 ### Cài đặt các trang cần thiết
@@ -47,7 +47,7 @@ pip install -r requirements.txt
 4. Tạo file `data.json` với nội dung tương tự như sau:
 ```json
 {
-    "sheet_name": "...",
+    "sheet_id": "...",
     
     "problems_data": {
         "A": {

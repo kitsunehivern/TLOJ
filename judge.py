@@ -2,12 +2,11 @@ import os
 import time
 import json
 import gspread
-from oauth2client.service_account import ServiceAccountCredentials
 
 with open("data.json", 'r', encoding = 'utf8') as f:
     data = json.load(f)
 
-    sheet_name = data['sheet_name']
+    sheet_id = data['sheet_id']
     problems_data = data['problems_data']
 
 with open("config.json", 'r', encoding = 'utf8') as f:
@@ -24,19 +23,10 @@ with open("key.json", 'r') as f:
 
     judge_id = key['client_id']
 
-print("Sheet name:", sheet_name)
-print("Judge ID:", judge_id)
-
-scope = ["https://spreadsheets.google.com/feeds", 
-         "https://www.googleapis.com/auth/spreadsheets", 
-         "https://www.googleapis.com/auth/drive.file", 
-         "https://www.googleapis.com/auth/drive"]
-
 print("Connecting to Google Sheets...")
 
-creds = ServiceAccountCredentials.from_json_keyfile_name("key.json", scope)
-client = gspread.authorize(creds)
-sheet = client.open(sheet_name).worksheet("Submissions")
+client = gspread.service_account("key.json")
+sheet = client.open_by_key(sheet_id).worksheet("Submissions")
 
 print("Connected to Google Sheets")
 
