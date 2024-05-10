@@ -4,12 +4,14 @@ import json
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 
+with open("data.json", 'r', encoding = 'utf8') as f:
+    data = json.load(f)
+
+    sheet_name = data['sheet_name']
+    problems_data = data['problems_data']
+
 with open("config.json", 'r', encoding = 'utf8') as f:
     config = json.load(f)
-
-    sheet_name = config['sheet_name']
-
-    problems_data = config['problems_data']
 
     result_message = config['result_message']
     code_extension = config['code_extension']
@@ -186,7 +188,7 @@ while True:
     print(f"Submission #{current_row - 1}:")
 
     contestant = row_data[1]
-    problem_id = row_data[3][0]
+    problem_id = row_data[3][:row_data[3].find('.')]
     problem_name = problems_data[problem_id]['name']
     extension = code_extension[row_data[4]]
     source_code = row_data[5]

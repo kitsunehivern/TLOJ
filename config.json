@@ -1,17 +1,4 @@
 {
-    "sheet_name": "TLOJ Database",
-
-    "problems_data": {
-        "A": {
-            "name": "RECT",
-            "time_limit": 1
-        },
-        "B": {
-            "name": "MAXV",
-            "time_limit": 1
-        }
-    },
-
     "result_message": {
         "AC": "Kết quả khớp đáp án",
         "CE": "Dịch lỗi",
