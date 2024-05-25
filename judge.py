@@ -7,10 +7,14 @@ with open("data.json", 'r', encoding = 'utf8') as f:
     data = json.load(f)
 
     sheet_id = data['sheet_id']
+    contest_id = data['contest_id']
+
     problems_data = data['problems_data']
 
 with open("config.json", 'r', encoding = 'utf8') as f:
     config = json.load(f)
+
+    round_digits = config['round_digits']
 
     result_message = config['result_message']
     code_extension = config['code_extension']
@@ -26,7 +30,7 @@ with open("key.json", 'r') as f:
 print("Connecting to Google Sheets...")
 
 client = gspread.service_account("key.json")
-sheet = client.open_by_key(sheet_id).worksheet("Submissions")
+sheet = client.open_by_key(sheet_id).worksheet(f"Submissions {contest_id}")
 
 print("Connected to Google Sheets")
 
@@ -58,7 +62,7 @@ def log_parser(log, problem_data):
             message += '\n' + logs[i]
         tests_result.append({'points': 0, 'execution_time': 0, 'message': message})
     else:
-        total_points = round(float(logs[0].split(' ')[-1].replace(',', '.')), 2)
+        total_points = round(float(logs[0].split(' ')[-1].replace(',', '.')), round_digits)
 
         i = 1
         while i < len(logs) and chr(0x2023) not in logs[i]:
@@ -70,14 +74,14 @@ def log_parser(log, problem_data):
                 j += 1
             j -= 1
 
-            points = round(float(logs[i].split(' ')[-1].replace(',', '.')), 2)
+            points = round(float(logs[i].split(' ')[-1].replace(',', '.')), round_digits)
             execution_time = 0
             message = result_message['AC']
             exit_code = 0
             for k in range(i, j + 1):
                 words = logs[k].split(' ')
 
-                for message_code in ['WA', 'RE', 'TLE']:
+                for message_code in ['WA', 'RE', 'TLE', 'NF']:
                     if result_message[message_code] in logs[k] and message == result_message['AC']:
                         message = result_message[message_code]
 
@@ -104,7 +108,7 @@ def log_parser(log, problem_data):
 
             i = j + 1
 
-    total_points = round(total_points, 2)
+    total_points = round(total_points, round_digits)
 
     if final_message == result_message['AC']:
         failed_test = len(tests_result)
@@ -112,9 +116,9 @@ def log_parser(log, problem_data):
     return total_points, max_execution_time, final_message, failed_test, tests_result
 
 def format_log(total_points, max_execution_time, final_message, tests_result):
-    log = f"Tổng: [{total_points:g} điểm, {max_execution_time} ms] {final_message}"
+    log = f"Tổng: [{f"%.{round_digits}f" % total_points} điểm, {max_execution_time} ms] {final_message}"
     for i in range(len(tests_result)):
-        log += f"\n#{i + 1}: [{tests_result[i]['points']:g} điểm, {tests_result[i]['execution_time']} ms] {tests_result[i]['message']}"
+        log += f"\n#{i + 1}: [{f"%.{round_digits}f" % tests_result[i]['points']} điểm, {tests_result[i]['execution_time']} ms] {tests_result[i]['message']}"
 
     return log
 
@@ -130,6 +134,7 @@ current_row = 0
 judge_done = True
 out_of_submission = False
 last_reset = -reset_time
+submission_status = ""
 while True:
     time.sleep(delay_time)
 
@@ -166,6 +171,7 @@ while True:
         print("Next submission found")
         
         judge_done = False
+        submission_status = "Queuing..."
 
     row_data = send_request(sheet.row_values, current_row)
     if row_data == []:
@@ -175,7 +181,7 @@ while True:
     else:
         out_of_submission = False
     
-    print(f"Submission #{current_row - 1}:")
+    print(f"Submission #{current_row - 1}:", submission_status)
 
     contestant = row_data[1]
     problem_id = row_data[3][:row_data[3].find('.')]
@@ -196,13 +202,15 @@ while True:
         with open("Submissions/" + submission_name, 'w', encoding = 'utf8') as f:
             f.write(source_code)
 
+        submission_status = "Waiting..."
         print("Change status to Waiting")
     elif judge == judge_id:
         if status == "Đang chờ...":
             if not os.path.exists("Submissions/" + submission_name):
                 send_request(sheet.update_cell, current_row, 7, "Đang chấm...")
-            
-            print("Change status to Judging")
+
+                submission_status = "Judging..."
+                print("Change status to Judging")
         elif status == "Đang chấm...":
             if os.path.exists("Submissions/Logs/" + submission_name + ".log"):
                 send_request(sheet.update_cell, current_row, 7, "Đã chấm")
@@ -210,12 +218,14 @@ while True:
                     total_points, max_execution_time, final_message, failed_test, tests_result = log_parser(f.read(), problems_data[problem_id])
                     formatted_log = format_log(total_points, max_execution_time, final_message, tests_result)
                     
-                    send_request(sheet.update, [[total_points, max_execution_time, final_message, failed_test, formatted_log]], f"I{current_row}:M{current_row}")  
+                    send_request(sheet.update, [[f"%.{round_digits}f" % total_points, max_execution_time, final_message, failed_test, formatted_log]], f"I{current_row}:M{current_row}")  
                 
                 judge_done = True
 
+                submission_status = "Judged"
                 print("Change status to Judged")
     else:
         judge_done = True
 
+        submission_status = "Skipped"
         print("Submission is judged by another judge")
