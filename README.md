@@ -48,6 +48,7 @@ pip install -r requirements.txt
 ```json
 {
     "sheet_id": "...",
+    "contest_id": "...",
     
     "problems_data": {
         "A": {
