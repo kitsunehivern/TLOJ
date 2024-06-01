@@ -60,6 +60,9 @@ def log_parser(log, problem_data):
                 continue
 
             message += '\n' + logs[i]
+
+        message = message[:10000] + "..." if len(message) > 10000 else message
+
         tests_result.append({'points': 0, 'execution_time': 0, 'message': message})
     else:
         total_points = round(float(logs[0].split(' ')[-1].replace(',', '.')), round_digits)
