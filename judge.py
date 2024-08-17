@@ -30,7 +30,7 @@ with open("key.json", 'r') as f:
 print("Connecting to Google Sheets...")
 
 client = gspread.service_account("key.json")
-sheet = client.open_by_key(sheet_id).worksheet(f"Submissions {contest_id}")
+sheet = client.open_by_key(sheet_id).worksheet(f"{contest_id}")
 
 print("Connected to Google Sheets")
 
@@ -187,20 +187,20 @@ while True:
     print(f"Submission #{current_row - 1}:", submission_status)
 
     contestant = row_data[1]
-    problem_id = row_data[3][:row_data[3].find('.')]
+    problem_id = row_data[2][:row_data[2].find('.')]
     problem_name = problems_data[problem_id]['name']
-    extension = code_extension[row_data[4]]
-    source_code = row_data[5]
+    extension = code_extension[row_data[3]]
+    source_code = row_data[4]
     status = ''
     judge = ''
-    if len(row_data) > 6:
-        status = row_data[6]
-        judge = row_data[7]
+    if len(row_data) >= 7:
+        status = row_data[5]
+        judge = row_data[6]
 
     submission_name = f"{str(current_row - 1).zfill(4)}[{contestant}][{problem_name}].{extension}"
 
     if status == '':
-        send_request(sheet.update, [["Đang chờ...", judge_id]], f"G{current_row}:H{current_row}")
+        send_request(sheet.update, [["Đang chờ...", judge_id]], f"F{current_row}:G{current_row}")
 
         with open("Submissions/" + submission_name, 'w', encoding = 'utf8') as f:
             f.write(source_code)
@@ -210,18 +210,18 @@ while True:
     elif judge == judge_id:
         if status == "Đang chờ...":
             if not os.path.exists("Submissions/" + submission_name):
-                send_request(sheet.update_cell, current_row, 7, "Đang chấm...")
+                send_request(sheet.update_cell, current_row, 6, "Đang chấm...")
 
                 submission_status = "Judging..."
                 print("Change status to Judging")
         elif status == "Đang chấm...":
             if os.path.exists("Submissions/Logs/" + submission_name + ".log"):
-                send_request(sheet.update_cell, current_row, 7, "Đã chấm")
+                send_request(sheet.update_cell, current_row, 6, "Đã chấm")
                 with open("Submissions/Logs/" + submission_name + ".log", 'r', encoding = 'utf8') as f:
                     total_points, max_execution_time, final_message, failed_test, tests_result = log_parser(f.read(), problems_data[problem_id])
                     formatted_log = format_log(total_points, max_execution_time, final_message, tests_result)
                     
-                    send_request(sheet.update, [[f"%.{round_digits}f" % total_points, max_execution_time, final_message, failed_test, formatted_log]], f"I{current_row}:M{current_row}")  
+                    send_request(sheet.update, [[f"%.{round_digits}f" % total_points, max_execution_time, final_message, failed_test, formatted_log]], f"H{current_row}:L{current_row}")  
                 
                 judge_done = True
 
