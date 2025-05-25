@@ -1,6 +1,5 @@
 {
-    "round_digits": 0,
-
+    "round_digits": 2,
     "result_message": {
         "AC": "Kết quả khớp đáp án",
         "CE": "Dịch lỗi",
@@ -10,7 +9,6 @@
         "RE": "Chạy sinh lỗi",
         "NF": "Không thấy file kết quả"
     },
-
     "code_extension": {
         "C++": "cpp",
         "C": "c",
@@ -18,7 +16,6 @@
         "Pascal": "pas",
         "Java": "java"
     },
-
     "delay_time": 2,
     "reset_time": 60
 }

@@ -49,7 +49,6 @@ pip install -r requirements.txt
 {
     "sheet_id": "...",
     "contest_id": "...",
-    
     "problems_data": {
         "A": {
             "name": "...",
@@ -71,6 +70,6 @@ py judge.py
 ## Liên hệ
 
 Mọi ý kiến và đóng góp xin được gửi về:
-- TLOI ([fanpage](https://www.facebook.com/tloi.dalat))
+- TLOI ([fanpage](https://www.facebook.com/tloi.dl))
 - Đinh Cao Minh Quân ([facebook](https://www.facebook.com/kitsunehivern))
 - Hoàng Đức Huy ([facebook](https://www.facebook.com/profile.php?id=100017551147817))
