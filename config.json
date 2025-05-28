@@ -7,7 +7,7 @@
         "PC": "Kết quả khớp một phần đáp án",
         "TLE": "Chạy quá thời gian",
         "RE": "Chạy sinh lỗi",
-        "NF": "Không thấy file kết quả"
+        "NOF": "Không thấy file kết quả"
     },
     "code_extension": {
         "C++": "cpp",
